@@ -22,6 +22,7 @@
   class="wild-popup"
   id="{{ popup_id }}"
   aria-labelledby="{{ popup_id }}-title"
+  tabindex="-1"
   data-wild-popup
   data-product-id="{{ product.id }}"
 >
@@ -68,6 +69,15 @@
     >
 
     {%- unless product.has_only_default_variant -%}
+      {%- comment -%}
+        Color options are always shown first and every other option after,
+        whatever order the product's options are in. data-option-index keeps the
+        product's real option position, which the JS uses to match variants.
+      {%- endcomment -%}
+      {%- liquid
+        assign color_options_html = ''
+        assign other_options_html = ''
+      -%}
       {%- for option in product.options_with_values -%}
         {%- liquid
           assign option_key = option.name | downcase
@@ -80,6 +90,7 @@
         -%}
 
         {%- if option_key contains 'color' or option_key contains 'colour' -%}
+          {%- capture option_html -%}
           <fieldset
             class="wild-option"
             data-wild-option
@@ -111,7 +122,10 @@
               {%- endfor -%}
             </div>
           </fieldset>
+          {%- endcapture -%}
+          {%- assign color_options_html = color_options_html | append: option_html -%}
         {%- else -%}
+          {%- capture option_html -%}
           {%- liquid
             assign placeholder = placeholder_prefix | append: ' ' | append: option_key
             assign list_id = input_name | append: '-list'
@@ -172,8 +186,13 @@
               {%- endfor -%}
             </ul>
           </div>
+          {%- endcapture -%}
+          {%- assign other_options_html = other_options_html | append: option_html -%}
         {%- endif -%}
       {%- endfor -%}
+
+      {{ color_options_html }}
+      {{ other_options_html }}
     {%- endunless -%}
 
     <button
