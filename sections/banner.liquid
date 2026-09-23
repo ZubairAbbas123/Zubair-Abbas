@@ -1,0 +1,564 @@
+{%- comment -%}
+  Gift Guide Banner
+  Desktop is built from a 1440px design frame, mobile/tablet from a 390px frame.
+
+  Files:
+  - assets/section-gift-banner.css   styles
+  - snippets/gift-banner-button.liquid  CTA with sliding hover fill
+{%- endcomment -%}
+
+{{ 'section-gift-banner.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign s = section.settings
+
+  # Only the first sections are likely above the fold; lazy-load the rest.
+  if section.index > 2
+    assign img_loading = 'lazy'
+    assign img_priority = 'auto'
+  else
+    assign img_loading = 'eager'
+    assign img_priority = 'high'
+  endif
+
+  assign mobile_image = s.mobile_image | default: s.image
+
+  assign mobile_description = s.mobile_description
+  if mobile_description == blank
+    assign mobile_description = s.description
+  endif
+
+  assign strip_mobile = s.strip_text_mobile | default: s.strip_text
+
+  # Transparent 1×1 GIF used to skip the image that is hidden at the current breakpoint.
+  assign blank_gif = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+-%}
+
+{%- comment -%}
+  Section-level font pickers guarantee the exact 400 / 500 Jost weights are
+  loaded, regardless of which weights the global theme typography loads.
+{%- endcomment -%}
+<style>
+  {{ s.heading_font | font_face: font_display: 'swap' }}
+  {{ s.body_font | font_face: font_display: 'swap' }}
+</style>
+
+<div
+  class="gift-banner"
+  style="
+    --gift-font-heading: {{ s.heading_font.family }}, {{ s.heading_font.fallback_families }};
+    --gift-font-heading-weight: {{ s.heading_font.weight }};
+    --gift-font-body: {{ s.body_font.family }}, {{ s.body_font.fallback_families }};
+    --gift-font-body-weight: {{ s.body_font.weight }};
+    --gift-header-bg: {{ s.header_bg }};
+    --gift-header-text: {{ s.header_text }};
+    --gift-choose-bg: {{ s.choose_bg }};
+    --gift-choose-text: {{ s.choose_text }};
+    --gift-choose-hover-bg: {{ s.choose_hover_bg }};
+    --gift-choose-hover-text: {{ s.choose_hover_text }};
+    --gift-hero-bg: {{ s.hero_bg }};
+    --gift-text: {{ s.text_color }};
+    --gift-shop-bg: {{ s.button_bg }};
+    --gift-shop-text: {{ s.button_text }};
+    --gift-shop-hover-bg: {{ s.button_hover_bg }};
+    --gift-shop-hover-text: {{ s.button_hover_text }};
+    --gift-strip-bg: {{ s.strip_bg }};
+    --gift-strip-text: {{ s.strip_text_color }};
+    --gift-logo-w: {{ s.logo_width }}px;
+    --gift-logo-w-m: {{ s.logo_width_mobile }}px;
+    --gift-h-size: {{ s.heading_size }};
+    --gift-h-size-m: {{ s.heading_size_mobile }}px;
+    --gift-hero-h: {{ s.desktop_height | default: 780 }};
+    --gift-m-media-h: {{ s.mobile_media_height | default: 258 }};
+    --gift-image-pos: {{ s.image_position }};
+    --gift-m-image-pos: {{ s.mobile_image_position }};
+  "
+>
+  {%- if s.show_header -%}
+    <header class="gift-banner__bar">
+      {%- if s.menu != blank -%}
+        <button
+          type="button"
+          class="gift-banner__burger"
+          aria-label="Open menu"
+          popovertarget="GiftBannerDrawer-{{ section.id }}"
+        >
+          <svg viewBox="0 0 21 13" fill="none" aria-hidden="true" focusable="false">
+            <path d="M0 1h21M0 6.5h21M0 12h21" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+      {%- endif -%}
+
+      <a class="gift-banner__logo" href="{{ routes.root_url }}">
+        {%- if s.logo != blank -%}
+          {%- liquid
+            assign logo_alt = s.logo.alt | default: shop.name
+            capture logo_sizes
+              echo '(min-width: 990px) ' | append: s.logo_width | append: 'px, ' | append: s.logo_width_mobile | append: 'px'
+            endcapture
+          -%}
+          {{
+            s.logo
+            | image_url: width: 640
+            | image_tag:
+              widths: '160, 320, 480, 640',
+              sizes: logo_sizes,
+              loading: 'eager',
+              alt: logo_alt
+          }}
+        {%- else -%}
+          <span class="gift-banner__logo-text">{{ shop.name | escape }}</span>
+        {%- endif -%}
+      </a>
+
+      {%- if s.tagline != blank -%}
+        <p class="gift-banner__tagline">{{ s.tagline | escape }}</p>
+      {%- endif -%}
+
+      {%- render 'gift-banner-button',
+        label: s.choose_label,
+        url: s.choose_link,
+        modifier: 'choose',
+        class: 'gift-banner__header-cta'
+      -%}
+    </header>
+  {%- endif -%}
+
+  <div class="gift-banner__hero">
+    <div class="gift-banner__media gift-banner__media--desktop">
+      {%- if s.image != blank -%}
+        {%- comment -%}
+          Browsers download <img> even inside display:none containers. The 1px
+          GIF source stops phones fetching the large desktop image.
+        {%- endcomment -%}
+        <picture>
+          <source media="(max-width: 989px)" srcset="{{ blank_gif }}">
+          {{
+            s.image
+            | image_url: width: 3840
+            | image_tag:
+              widths: '990, 1200, 1440, 1920, 2400, 2880, 3840',
+              sizes: '100vw',
+              loading: img_loading,
+              fetchpriority: img_priority
+          }}
+        </picture>
+      {%- else -%}
+        {{ 'lifestyle-1' | placeholder_svg_tag }}
+      {%- endif -%}
+    </div>
+
+    <div class="gift-banner__content">
+      {%- if s.heading != blank -%}
+        <{{ s.heading_tag }} class="gift-banner__heading">{{ s.heading }}</{{ s.heading_tag }}>
+      {%- endif -%}
+
+      {%- if s.description != blank -%}
+        <div class="gift-banner__text gift-banner__text--desktop">{{ s.description }}</div>
+      {%- endif -%}
+
+      {%- if mobile_description != blank -%}
+        <div class="gift-banner__text gift-banner__text--mobile">{{ mobile_description }}</div>
+      {%- endif -%}
+
+      <div class="gift-banner__media gift-banner__media--mobile">
+        {%- if mobile_image != blank -%}
+          <picture>
+            <source media="(min-width: 990px)" srcset="{{ blank_gif }}">
+            {{
+              mobile_image
+              | image_url: width: 1980
+              | image_tag:
+                widths: '390, 585, 780, 1170, 1560, 1980',
+                sizes: '100vw',
+                loading: img_loading
+            }}
+          </picture>
+        {%- else -%}
+          {{ 'lifestyle-2' | placeholder_svg_tag }}
+        {%- endif -%}
+      </div>
+
+      {%- render 'gift-banner-button', label: s.button_label, url: s.button_link, modifier: 'shop' -%}
+    </div>
+  </div>
+
+  {%- if s.show_strip and s.strip_text != blank -%}
+    <div class="gift-banner__strip">
+      <p>
+        <span class="gift-banner__strip-desktop">{{ s.strip_text | escape }}</span>
+        <span class="gift-banner__strip-mobile">{{ strip_mobile | escape }}</span>
+      </p>
+    </div>
+  {%- endif -%}
+
+  {%- if s.show_header and s.menu != blank -%}
+    {%- comment -%}
+      Native Popover API: the browser handles open/close, Escape, clicking
+      outside, and aria-expanded on the menu button — no JavaScript needed.
+    {%- endcomment -%}
+    <div
+      class="gift-banner__drawer"
+      id="GiftBannerDrawer-{{ section.id }}"
+      popover
+      role="dialog"
+      aria-label="{{ s.menu.title | escape }}"
+    >
+      <button
+        type="button"
+        class="gift-banner__close"
+        aria-label="Close menu"
+        popovertarget="GiftBannerDrawer-{{ section.id }}"
+        popovertargetaction="hide"
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false">
+          <path d="M1 1l16 16M17 1L1 17" stroke="currentColor" stroke-width="1.8"/>
+        </svg>
+      </button>
+
+      <nav class="gift-banner__menu" aria-label="{{ s.menu.title | escape }}">
+        <ul>
+          {%- for link in s.menu.links -%}
+            <li>
+              <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                {{- link.title | escape -}}
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+
+      {%- if s.tagline != blank -%}
+        <p class="gift-banner__drawer-tagline">{{ s.tagline | escape }}</p>
+      {%- endif -%}
+
+      {%- render 'gift-banner-button', label: s.choose_label, url: s.choose_link, modifier: 'choose' -%}
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Gift guide banner",
+  "tag": "section",
+  "class": "section-gift-banner",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Top bar"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_header",
+      "label": "Show top bar",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo",
+      "info": "Store name is shown until a logo is uploaded"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "Logo width (desktop)",
+      "min": 50,
+      "max": 250,
+      "step": 2,
+      "unit": "px",
+      "default": 152
+    },
+    {
+      "type": "range",
+      "id": "logo_width_mobile",
+      "label": "Logo width (mobile)",
+      "min": 50,
+      "max": 250,
+      "step": 2,
+      "unit": "px",
+      "default": 158
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "Center text",
+      "default": "Find the ideal gift for your loved ones."
+    },
+    {
+      "type": "text",
+      "id": "choose_label",
+      "label": "Button label",
+      "default": "Choose gift"
+    },
+    {
+      "type": "url",
+      "id": "choose_link",
+      "label": "Button link"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Mobile menu",
+      "info": "Opens from the menu icon on mobile and tablet. Leave empty to hide the icon.",
+      "default": "main-menu"
+    },
+    {
+      "type": "color",
+      "id": "header_bg",
+      "label": "Background",
+      "default": "#F5F5F5"
+    },
+    {
+      "type": "color",
+      "id": "header_text",
+      "label": "Text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "choose_bg",
+      "label": "Button background",
+      "default": "#FFF544"
+    },
+    {
+      "type": "color",
+      "id": "choose_text",
+      "label": "Button text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "choose_hover_bg",
+      "label": "Button hover background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "choose_hover_text",
+      "label": "Button hover text",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "header",
+      "content": "Images"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Desktop image",
+      "info": "Keep the bottom-left area clear for the text. Recommended 2880 × 1560 px"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "Desktop image focal point",
+      "default": "center center",
+      "options": [
+        { "value": "left top", "label": "Top left" },
+        { "value": "center top", "label": "Top center" },
+        { "value": "right top", "label": "Top right" },
+        { "value": "left center", "label": "Middle left" },
+        { "value": "center center", "label": "Middle center" },
+        { "value": "right center", "label": "Middle right" },
+        { "value": "left bottom", "label": "Bottom left" },
+        { "value": "center bottom", "label": "Bottom center" },
+        { "value": "right bottom", "label": "Bottom right" }
+      ]
+    },
+    {
+      "type": "number",
+      "id": "desktop_height",
+      "label": "Desktop image area height",
+      "info": "In px at a 1440px wide screen. Scales down on smaller screens.",
+      "default": 780
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "Mobile image",
+      "info": "Uses the desktop image if empty. Recommended 1170 × 774 px"
+    },
+    {
+      "type": "select",
+      "id": "mobile_image_position",
+      "label": "Mobile image focal point",
+      "default": "center center",
+      "options": [
+        { "value": "left center", "label": "Left" },
+        { "value": "center center", "label": "Center" },
+        { "value": "right center", "label": "Right" }
+      ]
+    },
+    {
+      "type": "number",
+      "id": "mobile_media_height",
+      "label": "Mobile image height",
+      "info": "In px at a 390px wide screen. Scales with screen width.",
+      "default": 258
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "The Gift Guide"
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading tag",
+      "info": "Use H1 only if this is the main heading of the page",
+      "default": "h2",
+      "options": [
+        { "value": "h1", "label": "H1" },
+        { "value": "h2", "label": "H2" },
+        { "value": "h3", "label": "H3" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size (desktop)",
+      "min": 30,
+      "max": 110,
+      "step": 1,
+      "unit": "px",
+      "default": 70
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mobile",
+      "label": "Heading size (mobile)",
+      "min": 20,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "default": 31
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description (desktop)",
+      "default": "<p>Discover Joy: Your Ultimate Holiday Gift Destination. Explore our curated selection and find the perfect gifts to delight your loved ones this holiday season.</p>"
+    },
+    {
+      "type": "richtext",
+      "id": "mobile_description",
+      "label": "Description (mobile)",
+      "info": "Uses the desktop description if empty",
+      "default": "<p>Discover Joy: Your Ultimate Holiday Gift Destination.</p>"
+    },
+    {
+      "type": "color",
+      "id": "hero_bg",
+      "label": "Background",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Main button"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Label",
+      "default": "Shop now"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Link"
+    },
+    {
+      "type": "color",
+      "id": "button_bg",
+      "label": "Background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_text",
+      "label": "Text",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_bg",
+      "label": "Hover background",
+      "default": "#FFF544"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text",
+      "label": "Hover text",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Bottom strip"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_strip",
+      "label": "Show bottom strip",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "strip_text",
+      "label": "Text (desktop)",
+      "default": "SUSTAINABLE, ETHICALLY MADE CLOTHES IN SIZES XXS TO 6XL"
+    },
+    {
+      "type": "text",
+      "id": "strip_text_mobile",
+      "label": "Text (mobile)",
+      "info": "Uses the desktop text if empty",
+      "default": "SUSTAINABLE, ETHICALLY MADE ACTIVEWEAR"
+    },
+    {
+      "type": "color",
+      "id": "strip_bg",
+      "label": "Background",
+      "default": "#F5F5F5"
+    },
+    {
+      "type": "color",
+      "id": "strip_text_color",
+      "label": "Text",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "font_picker",
+      "id": "heading_font",
+      "label": "Heading font",
+      "default": "jost_n5"
+    },
+    {
+      "type": "font_picker",
+      "id": "body_font",
+      "label": "Body and button font",
+      "default": "jost_n4"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Gift guide banner"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,31 @@
+{%- comment -%}
+  Renders a Gift Banner call-to-action link with a sliding hover fill.
+  Colours and sizing come from the modifier class in section-gift-banner.css.
+
+  Accepts:
+  - label {String} Button text (required)
+  - url {String} Link URL; falls back to the all-products page so the link never points to "#"
+  - modifier {String} 'choose' | 'shop'
+  - class {String} Extra classes (optional)
+
+  Usage:
+  {% render 'gift-banner-button', label: section.settings.button_label, url: section.settings.button_link, modifier: 'shop' %}
+{%- endcomment -%}
+
+{%- if label != blank -%}
+  <a
+    href="{{ url | default: routes.all_products_collection_url }}"
+    class="gift-banner__btn gift-banner__btn--{{ modifier }}{% if class != blank %} {{ class }}{% endif %}"
+  >
+    <span>{{ label | escape }}</span>
+    <svg
+      class="gift-banner__btn-arrow"
+      viewBox="0 0 27 12"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M0 6h25.6M20.2 1l5.4 5-5.4 5" stroke="currentColor" stroke-width="1.3"/>
+    </svg>
+  </a>
+{%- endif -%}
