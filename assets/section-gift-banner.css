@@ -279,7 +279,7 @@
 }
 
 .gift-banner__media svg {
-  background: #f2f2f2;
+  background: transparent;
 }
 
 /* Scales with the viewport so the crop matches the 390px design at every phone size. */
