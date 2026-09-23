@@ -21,7 +21,8 @@
     assign img_priority = 'high'
   endif
 
-  assign mobile_image = s.mobile_image | default: s.image
+  # The mobile crop matches the lower-right artwork, so fall back to the right image first.
+  assign mobile_image = s.mobile_image | default: s.side_image | default: s.image
 
   assign mobile_description = s.mobile_description
   if mobile_description == blank
@@ -68,9 +69,9 @@
     --gift-logo-w-m: {{ s.logo_width_mobile }}px;
     --gift-h-size: {{ s.heading_size }};
     --gift-h-size-m: {{ s.heading_size_mobile }}px;
-    --gift-hero-h: {{ s.desktop_height | default: 780 }};
     --gift-m-media-h: {{ s.mobile_media_height | default: 258 }};
     --gift-image-pos: {{ s.image_position }};
+    --gift-side-image-pos: {{ s.side_image_position }};
     --gift-m-image-pos: {{ s.mobile_image_position }};
   "
 >
@@ -125,12 +126,13 @@
   {%- endif -%}
 
   <div class="gift-banner__hero">
-    <div class="gift-banner__media gift-banner__media--desktop">
+    {%- comment -%}
+      Desktop hero = full-width top image, then a row with the text box (left)
+      and a second image (right). Both desktop images use a 1px GIF source below
+      990px, because browsers still download <img> inside display:none containers.
+    {%- endcomment -%}
+    <div class="gift-banner__media gift-banner__media--top">
       {%- if s.image != blank -%}
-        {%- comment -%}
-          Browsers download <img> even inside display:none containers. The 1px
-          GIF source stops phones fetching the large desktop image.
-        {%- endcomment -%}
         <picture>
           <source media="(max-width: 989px)" srcset="{{ blank_gif }}">
           {{
@@ -180,6 +182,24 @@
       </div>
 
       {%- render 'gift-banner-button', label: s.button_label, url: s.button_link, modifier: 'shop' -%}
+    </div>
+
+    <div class="gift-banner__media gift-banner__media--side">
+      {%- if s.side_image != blank -%}
+        <picture>
+          <source media="(max-width: 989px)" srcset="{{ blank_gif }}">
+          {{
+            s.side_image
+            | image_url: width: 2400
+            | image_tag:
+              widths: '620, 900, 1200, 1780, 2400',
+              sizes: '62vw',
+              loading: img_loading
+          }}
+        </picture>
+      {%- else -%}
+        {{ 'lifestyle-2' | placeholder_svg_tag }}
+      {%- endif -%}
     </div>
   </div>
 
@@ -346,38 +366,43 @@
     {
       "type": "image_picker",
       "id": "image",
-      "label": "Desktop image",
-      "info": "Keep the bottom-left area clear for the text. Recommended 2880 × 1560 px"
+      "label": "Desktop top image",
+      "info": "Full-width strip above the text. Recommended 2880 × 780 px (1440 × 390 ratio)"
     },
     {
       "type": "select",
       "id": "image_position",
-      "label": "Desktop image focal point",
+      "label": "Top image focal point",
       "default": "center center",
       "options": [
-        { "value": "left top", "label": "Top left" },
-        { "value": "center top", "label": "Top center" },
-        { "value": "right top", "label": "Top right" },
-        { "value": "left center", "label": "Middle left" },
-        { "value": "center center", "label": "Middle center" },
-        { "value": "right center", "label": "Middle right" },
-        { "value": "left bottom", "label": "Bottom left" },
-        { "value": "center bottom", "label": "Bottom center" },
-        { "value": "right bottom", "label": "Bottom right" }
+        { "value": "center top", "label": "Top" },
+        { "value": "center center", "label": "Center" },
+        { "value": "center bottom", "label": "Bottom" }
       ]
     },
     {
-      "type": "number",
-      "id": "desktop_height",
-      "label": "Desktop image area height",
-      "info": "In px at a 1440px wide screen. Scales down on smaller screens.",
-      "default": 780
+      "type": "image_picker",
+      "id": "side_image",
+      "label": "Desktop right image",
+      "info": "Shown to the right of the text. Recommended 1780 × 804 px (890 × 402 ratio)"
+    },
+    {
+      "type": "select",
+      "id": "side_image_position",
+      "label": "Right image focal point",
+      "default": "left top",
+      "options": [
+        { "value": "left top", "label": "Top left" },
+        { "value": "center top", "label": "Top center" },
+        { "value": "left center", "label": "Middle left" },
+        { "value": "center center", "label": "Middle center" }
+      ]
     },
     {
       "type": "image_picker",
       "id": "mobile_image",
       "label": "Mobile image",
-      "info": "Uses the desktop image if empty. Recommended 1170 × 774 px"
+      "info": "Uses the desktop right image if empty. Recommended 1170 × 774 px"
     },
     {
       "type": "select",

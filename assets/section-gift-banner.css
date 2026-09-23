@@ -86,7 +86,8 @@
 }
 
 .gift-banner__tagline,
-.gift-banner__header-cta {
+.gift-banner__bar .gift-banner__header-cta {
+  /* Extra .gift-banner__bar specificity: .gift-banner__btn sets display later in this file. */
   display: none;
 }
 
@@ -263,7 +264,8 @@
 }
 
 .gift-banner__text--desktop,
-.gift-banner__media--desktop {
+.gift-banner__media--top,
+.gift-banner__media--side {
   display: none;
 }
 
@@ -479,7 +481,7 @@
     display: block;
   }
 
-  .gift-banner__header-cta {
+  .gift-banner__bar .gift-banner__header-cta {
     display: inline-flex;
   }
 
@@ -491,22 +493,43 @@
     --btn-arrow: 27px;
   }
 
-  /* Height follows the 1440px frame and scales down proportionally below it. */
+  /*
+   * Two-row layout from the 1440px frame:
+   *   row 1: top image, full width, 1440 × 390
+   *   row 2: text box 550px | right image 890 × 402
+   * Columns keep the 550:890 ratio so everything scales with the screen.
+   */
   .gift-banner__hero {
-    block-size: min(calc(var(--gift-hero-h) * 1px), calc(var(--gift-hero-h) * 100vw / 1440));
-    min-block-size: 560px;
+    display: grid;
+    grid-template-columns: 550fr 890fr;
     padding-block-end: 0;
-    overflow: hidden;
   }
 
-  .gift-banner__media--desktop {
+  .gift-banner__media--top {
+    display: block;
+    grid-column: 1 / -1;
+    aspect-ratio: 1440 / 390;
+  }
+
+  .gift-banner__media--top img {
+    object-position: var(--gift-image-pos);
+  }
+
+  /* Absolute image so the cell height comes from the design ratio or the
+     text, whichever is taller, without the image stretching the row. */
+  .gift-banner__media--side {
+    position: relative;
+    display: block;
+    min-block-size: calc(402 * 100vw / 1440);
+  }
+
+  .gift-banner__media--side > * {
     position: absolute;
     inset: 0;
-    display: block;
   }
 
-  .gift-banner__media--desktop img {
-    object-position: var(--gift-image-pos);
+  .gift-banner__media--side img {
+    object-position: var(--gift-side-image-pos);
   }
 
   .gift-banner__media--mobile,
@@ -515,23 +538,23 @@
   }
 
   .gift-banner__content {
-    z-index: 1;
-    block-size: 100%;
     justify-content: flex-end;
     align-items: flex-start;
-    padding: 0 0 52px 67px;
+    padding-block: 31px 52px;
+    padding-inline: clamp(40px, calc(67 * 100vw / 1440), 67px) 24px;
+    background: var(--gift-hero-bg);
     text-align: start;
   }
 
   .gift-banner__heading {
     padding-inline: 0;
-    font-size: clamp(48px, calc(var(--gift-h-size) * 100vw / 1440), calc(var(--gift-h-size) * 1px));
+    font-size: clamp(44px, calc(var(--gift-h-size) * 100vw / 1440), calc(var(--gift-h-size) * 1px));
   }
 
   .gift-banner__text--desktop {
     display: block;
     max-inline-size: 490px;
-    margin-block-start: 52px;
+    margin-block-start: clamp(24px, calc(52 * 100vw / 1440), 52px);
     padding-inline: 0;
     font-size: 20px;
     line-height: 1.4;
@@ -541,7 +564,7 @@
     position: relative;
     inset: auto;
     translate: none;
-    margin-block-start: 51px;
+    margin-block-start: clamp(24px, calc(51 * 100vw / 1440), 51px);
   }
 
   .gift-banner__strip-desktop {
