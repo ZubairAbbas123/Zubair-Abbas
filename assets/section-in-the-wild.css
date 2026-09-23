@@ -1,0 +1,587 @@
+/*
+ * "In the wild" grid + quick-buy popup
+ * Mobile-first. Desktop values (min-width: 750px) come from the 1440px frame:
+ * 3 columns of 433 × 444 with 20px gaps inside 50px side padding.
+ * Mobile values come from the 390px frame: 2 columns of 175 × 192, 4px gaps.
+ */
+
+.wild {
+  --wild-font-serif: 'Lustria', Georgia, 'Times New Roman', serif;
+  --wild-ease: cubic-bezier(0.65, 0, 0.35, 1);
+
+  display: block;
+  padding-block: var(--wild-pad-top-m) var(--wild-pad-bottom-m);
+  background: var(--wild-bg);
+  color: var(--wild-text);
+  font-family: var(--wild-font-body);
+}
+
+.wild *,
+.wild *::before,
+.wild *::after {
+  box-sizing: border-box;
+}
+
+.wild__sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.wild__inner {
+  max-inline-size: 1440px;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+
+.wild__heading {
+  margin: 0 0 18px;
+  font-family: var(--wild-font-serif);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  vertical-align: middle;
+  text-align: center;
+  text-transform: none;
+  color: inherit;
+}
+
+/* ------------------------------------------------------------------ */
+/* Grid                                                                */
+/* ------------------------------------------------------------------ */
+
+.wild__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wild__item {
+  position: relative;
+  margin: 0;
+}
+
+.wild__media {
+  aspect-ratio: 175 / 192;
+  overflow: hidden;
+  background: #f2f2f2;
+}
+
+.wild__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hotspot                                                             */
+/* ------------------------------------------------------------------ */
+
+/* Mobile uses one section-wide position; desktop uses each block's own. */
+.wild__hotspot {
+  position: absolute;
+  inset-inline-start: var(--hs-x-m);
+  inset-block-start: var(--hs-y-m);
+  z-index: 1;
+  inline-size: 22px;
+  block-size: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  /* The + is two gradient bars, so it stays crisp at any zoom level. */
+  background:
+    linear-gradient(#000, #000) center / 10px 1.5px no-repeat,
+    linear-gradient(#000, #000) center / 1.5px 10px no-repeat,
+    rgb(237 237 237 / 0.92);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
+  cursor: pointer;
+  translate: -50% -50%;
+  transition: scale 0.25s var(--wild-ease);
+}
+
+/* A 22px target is below the 44px touch guideline; widen the hit area invisibly. */
+.wild__hotspot::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
+  border-radius: 50%;
+}
+
+.wild__hotspot:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .wild__hotspot:hover {
+    scale: 1.15;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Popup                                                               */
+/* ------------------------------------------------------------------ */
+
+.wild-popup {
+  position: fixed;
+  inline-size: min(311px, calc(100vw - 32px));
+  max-inline-size: none;
+  max-block-size: calc(100dvh - 32px);
+  margin: auto;
+  padding: 36px 0 25px;
+  border: 0;
+  border-radius: 0;
+  overflow: visible; /* the size list may extend past the card, as in the design */
+  background: #fff;
+  color: #000;
+  font-family: var(--wild-font-body);
+  box-shadow: 0 0 10px rgb(0 0 0 / 0.14);
+  opacity: 0;
+  translate: 0 8px;
+  transition:
+    opacity 0.25s var(--wild-ease),
+    translate 0.25s var(--wild-ease),
+    overlay 0.25s allow-discrete,
+    display 0.25s allow-discrete;
+}
+
+.wild-popup[open] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@starting-style {
+  .wild-popup[open] {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+.wild-popup::backdrop {
+  background: rgb(0 0 0 / 0.25);
+}
+
+html:has(.wild-popup[open]) {
+  overflow: hidden;
+}
+
+.wild-popup__close {
+  position: absolute;
+  inset-block-start: 5px;
+  inset-inline-end: 8px;
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #000;
+  cursor: pointer;
+}
+
+.wild-popup__close:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: -2px;
+}
+
+.wild-popup__top {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: start;
+  padding-inline: 17px 20px;
+}
+
+.wild-popup__media {
+  inline-size: 120px;
+  block-size: 140px;
+  overflow: hidden;
+  background: #f2f2f2;
+}
+
+.wild-popup__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.wild-popup__info {
+  padding-block-start: 2px;
+}
+
+/* Two-line box so one-line names sit vertically centred, like the design. */
+.wild-popup__title {
+  display: flex;
+  align-items: center;
+  min-block-size: 2.4em;
+  margin: 0;
+  font-family: var(--wild-font-body);
+  font-style: normal;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  vertical-align: middle;
+  text-transform: none;
+  color: inherit;
+}
+
+.wild-popup__price {
+  margin: 11px 0 0;
+  font-family: var(--wild-font-serif);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+
+.wild-popup__description {
+  display: -webkit-box;
+  margin: 12px 0 0;
+  overflow: hidden;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+
+.wild-popup__form {
+  margin-block-start: 6px;
+  padding-inline: 20px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Options                                                             */
+/* ------------------------------------------------------------------ */
+
+.wild-option {
+  position: relative;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.wild-option + .wild-option {
+  margin-block-start: 12px;
+}
+
+.wild-option__label {
+  display: block;
+  margin: 0 0 6px;
+  padding: 0;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: #3d3d3d;
+}
+
+/* Color boxes: borders drawn top/left on the group and right/bottom on each
+   cell, so neighbouring cells share a single 1px line. */
+.wild-colors {
+  display: grid;
+  grid-template-columns: repeat(var(--wild-color-cols, 2), minmax(0, 1fr));
+  border-block-start: 1px solid #000;
+  border-inline-start: 1px solid #000;
+}
+
+.wild-color {
+  position: relative;
+  display: flex;
+  align-items: center;
+  block-size: 40px;
+  padding-inline: 16px 8px;
+  border-inline-end: 1px solid #000;
+  border-block-end: 1px solid #000;
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.wild-color__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wild-color__stripe {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 5px;
+  background: var(--swatch, #ccc);
+  box-shadow: inset -1px 0 0 #000;
+}
+
+.wild-color__name {
+  overflow: hidden;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wild-color:has(.wild-color__input:checked) {
+  background: #000;
+  color: #fff;
+}
+
+.wild-color:has(.wild-color__input:focus-visible) {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+@media (hover: hover) {
+  .wild-color:not(:has(.wild-color__input:checked)):hover {
+    background: #f2f2f2;
+  }
+}
+
+/* Values that don't exist with the current selection stay selectable but are faded. */
+.wild-color[data-unavailable] .wild-color__name,
+.wild-select__option[data-unavailable] {
+  opacity: 0.4;
+}
+
+/* Dropdown */
+.wild-select__trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px;
+  inline-size: 100%;
+  block-size: 40px;
+  padding: 0;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font: inherit;
+  cursor: pointer;
+}
+
+.wild-select__trigger:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.wild-select__value {
+  align-self: center;
+  overflow: hidden;
+  padding-inline: 8px;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wild-select__value.is-placeholder {
+  padding-inline-start: 13px;
+  text-align: start;
+}
+
+.wild-select__icon {
+  display: grid;
+  place-items: center;
+  border-inline-start: 1px solid #000;
+}
+
+.wild-select__icon svg {
+  transition: rotate 0.2s ease;
+}
+
+.wild-select__trigger[aria-expanded='true'] .wild-select__icon svg {
+  rotate: 180deg;
+}
+
+.wild-select__list {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 100%;
+  z-index: 2;
+  max-block-size: 181px;
+  margin: -1px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #000;
+  background: #fff;
+  list-style: none;
+}
+
+.wild-select__list:focus {
+  outline: none;
+}
+
+.wild-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 36px;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
+.wild-select__option.is-active,
+.wild-select__option[aria-selected='true'] {
+  background: #000;
+  color: #fff;
+}
+
+@media (hover: hover) {
+  .wild-select__option:not([aria-selected='true']):hover {
+    background: #f2f2f2;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Add to cart                                                         */
+/* ------------------------------------------------------------------ */
+
+.wild-popup__submit {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 30px;
+  inline-size: 100%;
+  block-size: 45px;
+  margin-block-start: 50px;
+  padding-inline: 20px 30px;
+  border: 0;
+  border-radius: 0;
+  background: var(--wild-btn-bg);
+  color: var(--wild-btn-text);
+  font-family: var(--wild-font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 20.48px;
+  letter-spacing: 0;
+  text-align: center;
+  vertical-align: middle;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.5s var(--wild-ease);
+}
+
+/* Same sweep-in fill as the banner buttons, for a consistent feel. */
+.wild-popup__submit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--wild-btn-hover-bg);
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.55s var(--wild-ease);
+}
+
+@media (hover: hover) {
+  .wild-popup__submit:not(:disabled):hover {
+    color: var(--wild-btn-hover-text);
+  }
+
+  .wild-popup__submit:not(:disabled):hover::before {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+.wild-popup__submit:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+}
+
+.wild-popup__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.wild-popup__submit[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.wild-popup__submit-arrow {
+  flex: none;
+  inline-size: 35px;
+  block-size: auto;
+}
+
+.wild-popup__message {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #b3261e;
+}
+
+.wild-popup__message:empty {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Desktop / tablet                                                    */
+/* ------------------------------------------------------------------ */
+
+@media screen and (min-width: 750px) {
+  .wild {
+    padding-block: var(--wild-pad-top) var(--wild-pad-bottom);
+  }
+
+  .wild__inner {
+    padding-inline: clamp(20px, 3.472vw, 50px);
+  }
+
+  .wild__heading {
+    margin-block-end: 30px;
+    font-size: 36px;
+    text-align: start;
+  }
+
+  .wild__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .wild__media {
+    aspect-ratio: 433 / 444;
+  }
+
+  .wild__hotspot {
+    inset-inline-start: var(--hs-x);
+    inset-block-start: var(--hs-y);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wild-popup,
+  .wild__hotspot,
+  .wild-popup__submit,
+  .wild-popup__submit::before,
+  .wild-select__icon svg {
+    transition-duration: 0.01ms;
+  }
+}
