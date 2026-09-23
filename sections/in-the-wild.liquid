@@ -1,0 +1,415 @@
+{%- comment -%}
+  "In the wild" shoppable image grid
+  3 × 2 grid on desktop, 2 × 3 on mobile. Each block = one image + one product.
+  A hotspot on each image opens a quick-buy popup with live variant selection.
+
+  Files:
+  - assets/section-in-the-wild.css
+  - assets/in-the-wild.js                  (vanilla JS, ES module)
+  - snippets/in-the-wild-popup.liquid      (popup markup per product)
+{%- endcomment -%}
+
+{{ 'section-in-the-wild.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'in-the-wild.js' | asset_url }}" type="module"></script>
+
+{%- comment -%}
+  Lustria isn't in Shopify's font library, so it's self-hosted in assets/
+  (served from Shopify's CDN, no third-party request). Jost comes from the
+  font picker so the exact 300 / 400 weights are guaranteed.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign jost_light = s.body_font | font_modify: 'weight', '300'
+
+  if section.index > 2
+    assign img_loading = 'lazy'
+  else
+    assign img_loading = 'eager'
+  endif
+
+  # Products fall back to the chosen collection, in its sort order, when a block has no product.
+  assign fallback_products = s.collection.products
+
+  assign bonus_variant = s.bonus_product.selected_or_first_available_variant
+  assign popups = ''
+-%}
+
+<style>
+  @font-face {
+    font-family: 'Lustria';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('{{ 'lustria-regular.woff2' | asset_url }}') format('woff2');
+  }
+  {{ s.body_font | font_face: font_display: 'swap' }}
+  {%- if jost_light -%}{{ jost_light | font_face: font_display: 'swap' }}{%- endif -%}
+</style>
+
+<in-the-wild
+  class="wild"
+  data-section-id="{{ section.id }}"
+  {% if bonus_variant and bonus_variant.available %}
+    data-bonus-variant-id="{{ bonus_variant.id }}"
+    data-bonus-product-id="{{ s.bonus_product.id }}"
+  {% endif %}
+  data-trigger-a="{{ s.trigger_values_a | escape }}"
+  data-trigger-b="{{ s.trigger_values_b | escape }}"
+  data-missing-text="{{ s.missing_option_text | escape }}"
+  data-error-text="{{ s.error_text | escape }}"
+  data-sold-out-text="{{ s.sold_out_label | escape }}"
+  data-atc-text="{{ s.button_label | escape }}"
+  style="
+    --wild-font-body: {{ s.body_font.family }}, {{ s.body_font.fallback_families }};
+    --wild-bg: {{ s.background }};
+    --wild-text: {{ s.text_color }};
+    --wild-btn-bg: {{ s.button_bg }};
+    --wild-btn-text: {{ s.button_text }};
+    --wild-btn-hover-bg: {{ s.button_hover_bg }};
+    --wild-btn-hover-text: {{ s.button_hover_text }};
+    --wild-pad-top: {{ s.padding_top }}px;
+    --wild-pad-bottom: {{ s.padding_bottom }}px;
+    --wild-pad-top-m: {{ s.padding_top_mobile }}px;
+    --wild-pad-bottom-m: {{ s.padding_bottom_mobile }}px;
+    --hs-x-m: {{ s.mobile_hotspot_x }}%;
+    --hs-y-m: {{ s.mobile_hotspot_y }}%;
+  "
+>
+  <div class="wild__inner">
+    {%- if s.heading != blank -%}
+      <h2 class="wild__heading">{{ s.heading }}</h2>
+    {%- endif -%}
+
+    <ul class="wild__grid" role="list">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign product = block.settings.product
+          if product == blank and fallback_products
+            assign product = fallback_products[forloop.index0]
+          endif
+
+          assign grid_image = block.settings.image | default: product.featured_image
+          assign popup_id = 'WildPopup-' | append: block.id
+        -%}
+
+        <li
+          class="wild__item"
+          style="--hs-x: {{ block.settings.hotspot_x }}%; --hs-y: {{ block.settings.hotspot_y }}%;"
+          {{ block.shopify_attributes }}
+        >
+          <div class="wild__media">
+            {%- if grid_image -%}
+              {{
+                grid_image
+                | image_url: width: 1300
+                | image_tag:
+                  widths: '350, 450, 650, 866, 1100, 1300',
+                  sizes: '(min-width: 750px) calc((min(100vw, 1440px) - 140px) / 3), 50vw',
+                  loading: img_loading,
+                  class: 'wild__image'
+              }}
+            {%- else -%}
+              {{ 'product-apparel-1' | placeholder_svg_tag: 'wild__image wild__image--placeholder' }}
+            {%- endif -%}
+          </div>
+
+          {%- if product != blank -%}
+            <button
+              type="button"
+              class="wild__hotspot"
+              aria-haspopup="dialog"
+              aria-controls="{{ popup_id }}"
+              data-wild-open="{{ popup_id }}"
+            >
+              <span class="wild__sr-only">{{ s.hotspot_label | escape }} {{ product.title | escape }}</span>
+            </button>
+
+            {%- capture popup_markup -%}
+              {%- render 'in-the-wild-popup',
+                product: product,
+                popup_id: popup_id,
+                button_label: s.button_label,
+                sold_out_label: s.sold_out_label,
+                placeholder_prefix: s.select_placeholder
+              -%}
+            {%- endcapture -%}
+            {%- assign popups = popups | append: popup_markup -%}
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+
+  {%- comment -%} Dialogs live outside the grid list so the <ul> only holds grid items. {%- endcomment -%}
+  {{ popups }}
+</in-the-wild>
+
+{% schema %}
+{
+  "name": "In the wild grid",
+  "tag": "section",
+  "class": "section-in-the-wild",
+  "max_blocks": 6,
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "blocks": [
+    {
+      "type": "look",
+      "name": "Look",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "Uses the product image if empty. Recommended 866 × 888 px"
+        },
+        {
+          "type": "header",
+          "content": "Hotspot position (desktop)",
+          "info": "Place the + icon on the product in the photo. On mobile every hotspot uses the section's mobile position."
+        },
+        {
+          "type": "range",
+          "id": "hotspot_x",
+          "label": "Horizontal",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "default": 50
+        },
+        {
+          "type": "range",
+          "id": "hotspot_y",
+          "label": "Vertical",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "default": 50
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Tisso vison in the wild"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Fallback collection",
+      "info": "Blocks without a product use this collection's products, in the same order as the product list section"
+    },
+    {
+      "type": "text",
+      "id": "hotspot_label",
+      "label": "Hotspot label for screen readers",
+      "default": "Quick view"
+    },
+    {
+      "type": "header",
+      "content": "Mobile hotspot position",
+      "info": "Same position on every image on mobile"
+    },
+    {
+      "type": "range",
+      "id": "mobile_hotspot_x",
+      "label": "Horizontal",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 65
+    },
+    {
+      "type": "range",
+      "id": "mobile_hotspot_y",
+      "label": "Vertical",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 13
+    },
+    {
+      "type": "header",
+      "content": "Popup"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Add to cart label",
+      "default": "Add to cart"
+    },
+    {
+      "type": "text",
+      "id": "sold_out_label",
+      "label": "Sold out label",
+      "default": "Sold out"
+    },
+    {
+      "type": "text",
+      "id": "select_placeholder",
+      "label": "Dropdown placeholder prefix",
+      "info": "Followed by the option name, e.g. \"Choose your size\"",
+      "default": "Choose your"
+    },
+    {
+      "type": "text",
+      "id": "missing_option_text",
+      "label": "Missing option message",
+      "info": "Followed by the option name, e.g. \"Please choose your size\"",
+      "default": "Please choose your"
+    },
+    {
+      "type": "text",
+      "id": "error_text",
+      "label": "Add to cart error message",
+      "default": "Something went wrong. Please try again."
+    },
+    {
+      "type": "header",
+      "content": "Automatic bonus product",
+      "info": "When a variant matching one value from each list below is added, this product is added too"
+    },
+    {
+      "type": "product",
+      "id": "bonus_product",
+      "label": "Bonus product",
+      "info": "Select \"Soft Winter Jacket\""
+    },
+    {
+      "type": "text",
+      "id": "trigger_values_a",
+      "label": "Trigger values (color)",
+      "info": "Comma-separated",
+      "default": "Black"
+    },
+    {
+      "type": "text",
+      "id": "trigger_values_b",
+      "label": "Trigger values (size)",
+      "info": "Comma-separated",
+      "default": "Medium, M"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "label": "Background",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_bg",
+      "label": "Button background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_bg",
+      "label": "Button hover background",
+      "default": "#FFF544"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text",
+      "label": "Button hover text",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "font_picker",
+      "id": "body_font",
+      "label": "Body font",
+      "info": "Light (300) is loaded automatically for the product name and description",
+      "default": "jost_n4"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top padding (desktop)",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom padding (desktop)",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Top padding (mobile)",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "unit": "px",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Bottom padding (mobile)",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "unit": "px",
+      "default": 32
+    }
+  ],
+  "presets": [
+    {
+      "name": "In the wild grid",
+      "blocks": [
+        { "type": "look", "settings": { "hotspot_x": 62, "hotspot_y": 56 } },
+        { "type": "look", "settings": { "hotspot_x": 85, "hotspot_y": 52 } },
+        { "type": "look", "settings": { "hotspot_x": 63, "hotspot_y": 21 } },
+        { "type": "look", "settings": { "hotspot_x": 72, "hotspot_y": 18 } },
+        { "type": "look", "settings": { "hotspot_x": 52, "hotspot_y": 26 } },
+        { "type": "look", "settings": { "hotspot_x": 76, "hotspot_y": 39 } }
+      ]
+    }
+  ]
+}
+{% endschema %}
