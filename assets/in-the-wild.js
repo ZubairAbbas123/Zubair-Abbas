@@ -113,7 +113,8 @@ class InTheWild extends HTMLElement {
 
     const openButton = target.closest('[data-wild-open]');
     if (openButton instanceof HTMLElement) {
-      this.#openPopup(openButton.dataset.wildOpen);
+      // event.detail is 0 for keyboard "clicks", so keyboard users keep normal focus.
+      this.#openPopup(openButton.dataset.wildOpen, event.detail > 0);
       return;
     }
 
@@ -249,14 +250,20 @@ class InTheWild extends HTMLElement {
   /* Popup                                                             */
   /* ---------------------------------------------------------------- */
 
-  /** @param {string | undefined} id */
-  #openPopup(id) {
+  /**
+   * @param {string | undefined} id
+   * @param {boolean} [fromPointer]
+   */
+  #openPopup(id, fromPointer = false) {
     if (!id) return;
     const dialog = this.querySelector(`#${CSS.escape(id)}`);
     if (!(dialog instanceof HTMLDialogElement) || dialog.open) return;
 
     this.#setMessage(dialog, '');
     dialog.showModal();
+    // showModal() focuses the close button; after a mouse/tap that shows an
+    // unwanted focus ring, so focus the dialog container instead.
+    if (fromPointer) dialog.focus();
     this.#update(dialog);
   }
 
@@ -290,13 +297,33 @@ class InTheWild extends HTMLElement {
    * @returns {Array<string | null>}
    */
   #getSelection(dialog) {
-    return Array.from(dialog.querySelectorAll('[data-wild-option]')).map((option) => {
-      if (!(option instanceof HTMLElement)) return null;
-      if (option.matches('[data-wild-select]')) return option.dataset.selected ?? null;
+    const options = this.#getOptionElements(dialog);
+    /** @type {Array<string | null>} */
+    const selection = options.map(() => null);
 
+    // Colors are displayed first, so DOM order can differ from the product's
+    // option order. Each element's data-option-index is its real position.
+    options.forEach((option) => {
+      const position = Number(option.dataset.optionIndex);
+      if (option.matches('[data-wild-select]')) {
+        selection[position] = option.dataset.selected ?? null;
+        return;
+      }
       const checked = option.querySelector('input:checked');
-      return checked instanceof HTMLInputElement ? checked.value : null;
+      selection[position] = checked instanceof HTMLInputElement ? checked.value : null;
     });
+
+    return selection;
+  }
+
+  /**
+   * @param {HTMLDialogElement} dialog
+   * @returns {HTMLElement[]}
+   */
+  #getOptionElements(dialog) {
+    return Array.from(dialog.querySelectorAll('[data-wild-option]')).filter(
+      /** @returns {option is HTMLElement} */ (option) => option instanceof HTMLElement
+    );
   }
 
   /**
@@ -355,7 +382,8 @@ class InTheWild extends HTMLElement {
    * @param {Array<string | null>} selection
    */
   #markUnavailable(dialog, variants, selection) {
-    dialog.querySelectorAll('[data-wild-option]').forEach((option, position) => {
+    this.#getOptionElements(dialog).forEach((option) => {
+      const position = Number(option.dataset.optionIndex);
       option.querySelectorAll('[data-wild-value]').forEach((element) => {
         if (!(element instanceof HTMLElement)) return;
         const value = element.dataset.wildValue;
@@ -521,9 +549,12 @@ class InTheWild extends HTMLElement {
     const variant = this.#resolveVariant(dialog);
 
     if (!variant) {
-      const missing = this.#getSelection(dialog).indexOf(null);
-      const optionEl = dialog.querySelectorAll('[data-wild-option]')[missing];
-      const name = optionEl instanceof HTMLElement ? optionEl.dataset.optionName ?? '' : '';
+      // Ask for the first unanswered option in the order it appears on screen.
+      const selection = this.#getSelection(dialog);
+      const optionEl = this.#getOptionElements(dialog).find(
+        (option) => selection[Number(option.dataset.optionIndex)] === null
+      );
+      const name = optionEl?.dataset.optionName ?? '';
       this.#setMessage(dialog, `${this.dataset.missingText ?? ''} ${name.toLowerCase()}`.trim());
       return;
     }
