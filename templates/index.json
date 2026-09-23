@@ -21,15 +21,15 @@
         "choose_label": "Choose gift",
         "choose_link": "",
         "menu": "main-menu",
-        "header_bg": "#F5F5F5",
+        "header_bg": "#f5f5f5",
         "header_text": "#000000",
-        "choose_bg": "#FFF544",
+        "choose_bg": "#fff544",
         "choose_text": "#000000",
         "choose_hover_bg": "#000000",
-        "choose_hover_text": "#FFFFFF",
+        "choose_hover_text": "#ffffff",
         "image": "shopify://shop_images/shopify-teststore-hero.png",
         "image_position": "center center",
-        "desktop_height": 780,
+        "side_image_position": "left top",
         "mobile_image_position": "center center",
         "mobile_media_height": 258,
         "heading": "The Gift Guide",
@@ -38,21 +38,109 @@
         "heading_size_mobile": 31,
         "description": "<p>Discover Joy: Your Ultimate Holiday Gift Destination. Explore our curated selection and find the perfect gifts to delight your loved ones this holiday season.</p>",
         "mobile_description": "<p>Discover Joy: Your Ultimate Holiday Gift Destination.</p>",
-        "hero_bg": "#FFFFFF",
+        "hero_bg": "#ffffff",
         "text_color": "#000000",
         "button_label": "Shop now",
         "button_link": "",
         "button_bg": "#000000",
-        "button_text": "#FFFFFF",
-        "button_hover_bg": "#FFF544",
+        "button_text": "#ffffff",
+        "button_hover_bg": "#fff544",
         "button_hover_text": "#000000",
         "show_strip": true,
         "strip_text": "SUSTAINABLE, ETHICALLY MADE CLOTHES IN SIZES XXS TO 6XL",
         "strip_text_mobile": "SUSTAINABLE, ETHICALLY MADE ACTIVEWEAR",
-        "strip_bg": "#F5F5F5",
+        "strip_bg": "#f5f5f5",
         "strip_text_color": "#000000",
         "heading_font": "jost_n5",
         "body_font": "jost_n4"
+      }
+    },
+    "in_the_wild_t36YTn": {
+      "type": "in-the-wild",
+      "blocks": {
+        "look_tUUjrG": {
+          "type": "look",
+          "settings": {
+            "product": "",
+            "hotspot_x": 62,
+            "hotspot_y": 56
+          }
+        },
+        "look_7zgtXw": {
+          "type": "look",
+          "settings": {
+            "product": "",
+            "hotspot_x": 85,
+            "hotspot_y": 52
+          }
+        },
+        "look_YR4Jq7": {
+          "type": "look",
+          "settings": {
+            "product": "",
+            "hotspot_x": 63,
+            "hotspot_y": 21
+          }
+        },
+        "look_NxGTJ7": {
+          "type": "look",
+          "settings": {
+            "product": "",
+            "hotspot_x": 72,
+            "hotspot_y": 18
+          }
+        },
+        "look_qtKXa3": {
+          "type": "look",
+          "settings": {
+            "product": "",
+            "hotspot_x": 52,
+            "hotspot_y": 26
+          }
+        },
+        "look_tEqErk": {
+          "type": "look",
+          "settings": {
+            "product": "",
+            "hotspot_x": 76,
+            "hotspot_y": 39
+          }
+        }
+      },
+      "block_order": [
+        "look_tUUjrG",
+        "look_7zgtXw",
+        "look_YR4Jq7",
+        "look_NxGTJ7",
+        "look_qtKXa3",
+        "look_tEqErk"
+      ],
+      "name": "In the wild grid",
+      "settings": {
+        "heading": "Tisso vison in the wild",
+        "collection": "",
+        "hotspot_label": "Quick view",
+        "mobile_hotspot_x": 65,
+        "mobile_hotspot_y": 13,
+        "button_label": "Add to cart",
+        "sold_out_label": "Sold out",
+        "select_placeholder": "Choose your",
+        "missing_option_text": "Please choose your",
+        "error_text": "Something went wrong. Please try again.",
+        "bonus_product": "",
+        "trigger_values_a": "Black",
+        "trigger_values_b": "Medium, M",
+        "background": "#FFFFFF",
+        "text_color": "#000000",
+        "button_bg": "#000000",
+        "button_text": "#FFFFFF",
+        "button_hover_bg": "#FFF544",
+        "button_hover_text": "#000000",
+        "body_font": "jost_n4",
+        "padding_top": 60,
+        "padding_bottom": 60,
+        "padding_top_mobile": 32,
+        "padding_bottom_mobile": 32
       }
     },
     "product_list_fa6P9H": {
@@ -257,6 +345,7 @@
   },
   "order": [
     "banner_i3aNwR",
+    "in_the_wild_t36YTn",
     "product_list_fa6P9H"
   ]
 }
