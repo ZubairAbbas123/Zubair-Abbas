@@ -1,0 +1,565 @@
+/*
+ * Gift Guide Banner
+ * Mobile-first. Mobile/tablet values come from the 390px design frame,
+ * desktop values (min-width: 990px) from the 1440px frame.
+ * Per-section values (colours, sizes, fonts) arrive as custom properties
+ * set inline on <gift-banner> in sections/banner.liquid.
+ */
+
+.gift-banner {
+  --gift-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --gift-fill-duration: 0.55s;
+
+  display: block;
+  font-family: var(--gift-font-body);
+  font-weight: var(--gift-font-body-weight);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.gift-banner *,
+.gift-banner *::before,
+.gift-banner *::after {
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------------ */
+/* Top bar                                                             */
+/* ------------------------------------------------------------------ */
+
+.gift-banner__bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 65px;
+  padding-inline: 56px;
+  background: var(--gift-header-bg);
+  color: var(--gift-header-text);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.08);
+}
+
+.gift-banner__burger {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 42px;
+  block-size: 42px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.gift-banner__burger svg {
+  inline-size: 21px;
+  block-size: 13px;
+}
+
+.gift-banner__logo {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gift-banner__logo img {
+  display: block;
+  inline-size: var(--gift-logo-w-m);
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+/* Fallback shown only until a logo image is uploaded. */
+.gift-banner__logo-text {
+  font-family: var(--gift-font-heading);
+  font-weight: var(--gift-font-heading-weight);
+  font-size: 28px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.gift-banner__tagline,
+.gift-banner__header-cta {
+  display: none;
+}
+
+.gift-banner__tagline {
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--gift-font-body-weight);
+  line-height: 13.42px;
+  letter-spacing: 0;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons — shared sliding-fill effect                                 */
+/* ------------------------------------------------------------------ */
+
+.gift-banner__btn {
+  position: relative;
+  isolation: isolate; /* keeps the ::before fill behind the label but above the base background */
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--btn-gap);
+  block-size: var(--btn-height);
+  padding-inline: var(--btn-pad-start) var(--btn-pad-end);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  font-family: var(--gift-font-body);
+  font-weight: var(--gift-font-body-weight);
+  font-size: 16px;
+  line-height: 20.48px;
+  letter-spacing: 0;
+  text-align: center;
+  vertical-align: middle;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  border: 0;
+  border-radius: 0;
+  transition: color var(--gift-fill-duration) var(--gift-ease);
+}
+
+/*
+ * The fill grows from the left on hover. The origin flips to the right in the
+ * resting state so that on mouse-out the fill keeps travelling right instead of
+ * reversing, which reads as one continuous sweep.
+ */
+.gift-banner__btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--btn-hover-bg);
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform var(--gift-fill-duration) var(--gift-ease);
+}
+
+.gift-banner__btn:focus-visible {
+  outline: 2px solid var(--btn-hover-bg);
+  outline-offset: 3px;
+}
+
+.gift-banner__btn:focus-visible,
+.gift-banner__btn:active {
+  color: var(--btn-hover-text);
+}
+
+.gift-banner__btn:focus-visible::before,
+.gift-banner__btn:active::before {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+/* Hover only on real pointers, so a tap on touch screens doesn't leave the fill stuck. */
+@media (hover: hover) {
+  .gift-banner__btn:hover {
+    color: var(--btn-hover-text);
+  }
+
+  .gift-banner__btn:hover::before {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+.gift-banner__btn-arrow {
+  display: block;
+  flex: none;
+  inline-size: var(--btn-arrow);
+  block-size: auto;
+}
+
+.gift-banner__btn--choose {
+  --btn-bg: var(--gift-choose-bg);
+  --btn-text: var(--gift-choose-text);
+  --btn-hover-bg: var(--gift-choose-hover-bg);
+  --btn-hover-text: var(--gift-choose-hover-text);
+  --btn-height: 44px;
+  --btn-gap: 18px;
+  --btn-pad-start: 41px;
+  --btn-pad-end: 22px;
+  --btn-arrow: 25px;
+}
+
+.gift-banner__btn--shop {
+  --btn-bg: var(--gift-shop-bg);
+  --btn-text: var(--gift-shop-text);
+  --btn-hover-bg: var(--gift-shop-hover-bg);
+  --btn-hover-text: var(--gift-shop-hover-text);
+  --btn-height: 46px;
+  --btn-gap: 27px;
+  --btn-pad-start: 38px;
+  --btn-pad-end: 20px;
+  --btn-arrow: 26px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero                                                                */
+/* ------------------------------------------------------------------ */
+
+.gift-banner__hero {
+  position: relative;
+  padding-block-end: 7px;
+  background: var(--gift-hero-bg);
+  color: var(--gift-text);
+}
+
+.gift-banner__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block-start: 50px;
+  text-align: center;
+}
+
+.gift-banner__heading {
+  margin: 0;
+  padding-inline: 24px;
+  font-family: var(--gift-font-heading);
+  font-weight: var(--gift-font-heading-weight);
+  font-size: var(--gift-h-size-m);
+  line-height: 1;
+  letter-spacing: 0;
+  vertical-align: middle;
+  text-transform: none;
+  color: inherit;
+}
+
+.gift-banner__text {
+  margin-block-start: 26px;
+  padding-inline: 24px;
+  font-size: 16px;
+  font-weight: var(--gift-font-body-weight);
+  line-height: 1.4;
+  letter-spacing: 0;
+  vertical-align: middle;
+  color: inherit;
+}
+
+.gift-banner__text p {
+  margin: 0;
+}
+
+.gift-banner__text p + p {
+  margin-block-start: 0.6em;
+}
+
+.gift-banner__text a {
+  color: inherit;
+}
+
+.gift-banner__text--desktop,
+.gift-banner__media--desktop {
+  display: none;
+}
+
+.gift-banner__media picture,
+.gift-banner__media img,
+.gift-banner__media svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.gift-banner__media svg {
+  background: #f2f2f2;
+}
+
+/* Scales with the viewport so the crop matches the 390px design at every phone size. */
+.gift-banner__media--mobile {
+  inline-size: 100%;
+  block-size: min(calc(var(--gift-m-media-h) * 100vw / 390), 560px);
+  margin-block-start: 21px;
+}
+
+.gift-banner__media--mobile img {
+  object-position: var(--gift-m-image-pos);
+}
+
+.gift-banner__content > .gift-banner__btn--shop {
+  position: absolute;
+  inset-block-end: 35px;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Bottom strip                                                        */
+/* ------------------------------------------------------------------ */
+
+.gift-banner__strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 34px;
+  padding: 4px 16px;
+  background: var(--gift-strip-bg);
+  color: var(--gift-strip-text);
+  text-align: center;
+}
+
+.gift-banner__strip p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  color: inherit;
+}
+
+.gift-banner__strip-desktop {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile drawer (native popover — no JavaScript)                       */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Never set `display` on the closed state: the browser's own
+ * [popover]:not(:popover-open) { display: none } must keep it hidden.
+ * @starting-style + allow-discrete give a slide-in/out; browsers without
+ * support simply open and close instantly, which is still fully usable.
+ */
+.gift-banner__drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  inline-size: min(85vw, 340px);
+  max-inline-size: none;
+  block-size: 100dvh;
+  max-block-size: none;
+  margin: 0;
+  padding: 64px 24px 32px;
+  border: 0;
+  overflow-y: auto;
+  background: var(--gift-header-bg);
+  color: var(--gift-header-text);
+  transform: translateX(-100%);
+  transition:
+    transform 0.4s var(--gift-ease),
+    overlay 0.4s allow-discrete,
+    display 0.4s allow-discrete;
+}
+
+.gift-banner__drawer:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transform: none;
+}
+
+@starting-style {
+  .gift-banner__drawer:popover-open {
+    transform: translateX(-100%);
+  }
+}
+
+.gift-banner__drawer::backdrop {
+  background: rgb(0 0 0 / 0);
+  transition:
+    background-color 0.4s var(--gift-ease),
+    overlay 0.4s allow-discrete,
+    display 0.4s allow-discrete;
+}
+
+.gift-banner__drawer:popover-open::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+@starting-style {
+  .gift-banner__drawer:popover-open::backdrop {
+    background: rgb(0 0 0 / 0);
+  }
+}
+
+/* Lock page scroll while the drawer is open (mobile/tablet only, so a
+   drawer left open while resizing to desktop can't freeze the page). */
+@media screen and (max-width: 989px) {
+  html:has(.gift-banner__drawer:popover-open) {
+    overflow: hidden;
+  }
+}
+
+.gift-banner__close {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-end: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 42px;
+  block-size: 42px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.gift-banner__burger:focus-visible,
+.gift-banner__close:focus-visible,
+.gift-banner__menu a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.gift-banner__menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gift-banner__menu a {
+  display: block;
+  padding-block: 12px;
+  border-block-end: 1px solid rgb(0 0 0 / 0.08);
+  font-size: 20px;
+  line-height: 1.2;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gift-banner__menu a[aria-current='page'] {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.gift-banner__drawer-tagline {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.gift-banner__drawer .gift-banner__btn {
+  align-self: flex-start;
+}
+
+/* ------------------------------------------------------------------ */
+/* Desktop                                                             */
+/* ------------------------------------------------------------------ */
+
+@media screen and (min-width: 990px) {
+  .gift-banner__bar {
+    justify-content: space-between;
+    block-size: 64px;
+    padding-inline: 50px;
+    box-shadow: none;
+  }
+
+  /* :popover-open is included so a drawer left open while resizing stays hidden. */
+  .gift-banner__burger,
+  .gift-banner__drawer,
+  .gift-banner__drawer:popover-open {
+    display: none;
+  }
+
+  .gift-banner__logo img {
+    inline-size: var(--gift-logo-w);
+  }
+
+  .gift-banner__logo-text {
+    font-size: 26px;
+  }
+
+  .gift-banner__tagline {
+    display: block;
+  }
+
+  .gift-banner__header-cta {
+    display: inline-flex;
+  }
+
+  .gift-banner__btn--shop {
+    --btn-height: 50px;
+    --btn-gap: 28px;
+    --btn-pad-start: 55px;
+    --btn-pad-end: 23px;
+    --btn-arrow: 27px;
+  }
+
+  /* Height follows the 1440px frame and scales down proportionally below it. */
+  .gift-banner__hero {
+    block-size: min(calc(var(--gift-hero-h) * 1px), calc(var(--gift-hero-h) * 100vw / 1440));
+    min-block-size: 560px;
+    padding-block-end: 0;
+    overflow: hidden;
+  }
+
+  .gift-banner__media--desktop {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  .gift-banner__media--desktop img {
+    object-position: var(--gift-image-pos);
+  }
+
+  .gift-banner__media--mobile,
+  .gift-banner__text--mobile {
+    display: none;
+  }
+
+  .gift-banner__content {
+    z-index: 1;
+    block-size: 100%;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 0 0 52px 67px;
+    text-align: start;
+  }
+
+  .gift-banner__heading {
+    padding-inline: 0;
+    font-size: clamp(48px, calc(var(--gift-h-size) * 100vw / 1440), calc(var(--gift-h-size) * 1px));
+  }
+
+  .gift-banner__text--desktop {
+    display: block;
+    max-inline-size: 490px;
+    margin-block-start: 52px;
+    padding-inline: 0;
+    font-size: 20px;
+    line-height: 1.4;
+  }
+
+  .gift-banner__content > .gift-banner__btn--shop {
+    position: relative;
+    inset: auto;
+    translate: none;
+    margin-block-start: 51px;
+  }
+
+  .gift-banner__strip-desktop {
+    display: inline;
+  }
+
+  .gift-banner__strip-mobile {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift-banner {
+    --gift-fill-duration: 0.01ms;
+  }
+
+  .gift-banner__drawer,
+  .gift-banner__drawer::backdrop {
+    transition-duration: 0.01ms;
+  }
+}
